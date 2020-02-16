@@ -1,18 +1,20 @@
 # Navigation_stack
 
-# gmapping
+# 建图
 
-# cartographer
+## gmapping
 
-## 常见问题
+## cartographer
 
-### 1. 使用imu时地图建反了
+### 常见问题
+
+1. #### 使用imu时地图建反了
 
 cartographer通过判断imu的g的方向判定哪个为z轴
 
 而其判断的为正值+g，因此若imu输出为-g则建图会相反
 
-### 2. F1228 10:32:13.000000 22824 map_by_time.h:43] Check failed: data.time > std::prev(trajectory.end())->first (621355968800740000 vs. 621355968800740000)
+#### 2. F1228 10:32:13.000000 22824 map_by_time.h:43] Check failed: data.time > std::prev(trajectory.end())->first (621355968800740000 vs. 621355968800740000)
 
 https://github.com/googlecartographer/cartographer_ros/issues/1143
 
@@ -26,18 +28,28 @@ https://github.com/googlecartographer/cartographer_ros/issues/1143
 
 改为0.2就可以在50ms仿真下正常运行
 
-### 3. 如何保存为地图
+#### 3. 如何保存为地图
 
 rosservice call /write_state /home/chrisliu/ROS/cartographer_ws/RaceMap.pbstream true
 rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /home/chrisliu/ROS/cartographer_ws/RaceMap.pbstream -map_filestem /home/chrisliu/ROS/cartographer_ws/RaceMap
 
-# amcl
+## gmapping vs. cartographer
 
-# move_base
+gmapping: 没有回环检测，累计误差严重
 
-## 1.输入
+cartographer：有回环检测，建图效果较好，但精度有待提升
 
-## 2.输出
+# 定位
+
+## amcl
+
+
+
+## move_base
+
+### 1.输入
+
+### 2.输出
 
 /cmd_vel
 
@@ -53,7 +65,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 
 **×很多根据自己希望的速度随便加系数可能导致导航不能良好运行**
 
-## 3.参数
+### 3.参数
 
 #### Parameters
 
@@ -115,11 +127,11 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 
 
 
-## teb_local_planner
+### teb_local_planner
 
-### 常见问题
+#### 常见问题
 
-#### 1.为什么我的机器人导航太靠近墙壁和/或切角？
+##### 1.为什么我的机器人导航太靠近墙壁和/或切角？
 
 **解决：**
 
@@ -133,7 +145,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 - 如果您希望更多地遵循全局路径，请参阅全局路径跟踪。
 - 如果您的机器人撞到墙壁，您应该增加min_obstacle_dist或设置适当的足迹（请参阅本教程）。
 
-#### 2.为什么我的机器人不能正确地遵循全球计划？
+##### 2.为什么我的机器人不能正确地遵循全球计划？
 
 **解决：**
 
@@ -144,7 +156,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 - 但是不推荐这种方法，因为它减少了预测/计划范围并削弱了避开障碍的能力（虚拟目标在当前版本中是固定的，因此不需要优化）。相反，为了考虑全局路径跟踪，teb_local_planner能够沿全局计划注入吸引子（via-points）（吸引子之间的距离：global_plan_viapoint_sep，吸引力：weight_viapoint）。
 - 有关详细信息，请参阅教程遵循全局计划（Via-Points）。
 
-#### 3.导致以下行为的原因是什么？
+##### 3.导致以下行为的原因是什么？
 
 ![请输入图片描述](README.assets/robot_obstacle_distance_too_high.jpg)
 
@@ -159,7 +171,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 - 然后，您还必须正确配置您的全局规划（机器人足迹，膨胀半径等），以通过它进行全局规划。
 - 否则减小最小距离，直到轨迹不包含任何大间隙。
 
-#### 4.如果目标姿态在机器人后面，并且开始和目标姿态的方向相似，为什么机器人要切换方向？
+##### 4.如果目标姿态在机器人后面，并且开始和目标姿态的方向相似，为什么机器人要切换方向？
 
 **解决：**
 
@@ -192,7 +204,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 - 注意，teb_local_planner参数allow_init_with_backwards_motion需要设置为true，以便开始和当前中间目标之间的轨迹（例如，从采样独特拓扑中获得）也用向后方向初始化（仅在目标落后于开头时具有相似性） 方向）。
 - 这也允许机器人在本地代价地图中正确后退，即使除了最后的中间方向之外的所有方向都是向前的。
 
-#### 5.计算本地规划对我的机器人来说需要太长时间。 我可以加快规划吗？
+##### 5.计算本地规划对我的机器人来说需要太长时间。 我可以加快规划吗？
 
 **解决：**
 
@@ -255,7 +267,7 @@ rosrun cartographer_ros cartographer_pbstream_to_ros_map -pbstream_filename /hom
 
 
 
-### 参数
+#### 参数
 
 The teb_local_planner package allows the user to set [Parameters](http://wiki.ros.org/Parameters) in order to customize the behavior. These parameters are grouped into several categories: robot configuration, goal tolerance, trajectory configuration, obstacles, optimization, planning in distinctive topologies and miscellaneous parameters. Some of them are chosen to be compliant with the [base_local_planner](http://wiki.ros.org/base_local_planner). Many (but not all) parameters can be modified at runtime using [rqt_reconfigure](http://wiki.ros.org/rqt_reconfigure).
 
